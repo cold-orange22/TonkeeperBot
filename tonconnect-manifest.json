@@ -1,5 +1,5 @@
 {
-  "url": "https://your-vercel-app.vercel.app",
+  "url": "https://tonkeeper-bot.vercel.app/",
   "name": "TON Auth Bot",
-  "iconUrl": "https://your-vercel-app.vercel.app/icon.png"
+  "iconUrl": "https://tonkeeper-bot.vercel.app/icon.png"
 }
