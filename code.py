@@ -23,7 +23,7 @@ async def start(message: types.Message):
 
 @dp.message(lambda message: message.web_app_data is not None)
 async def handle_web_app_data(message: types.Message):
-    print(message)
+    print("Не понял")
     wallet_address = message.web_app_data.data
     await message.answer(f"✅ Кошелёк подключён: `{wallet_address}`", parse_mode="Markdown")
 
