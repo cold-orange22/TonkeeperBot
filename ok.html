@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TON Auth</title>
+  <!-- Локальный скрипт (скачанный с telegram.org) -->
+  <script src="./telegram-web-app.js"></script>
+  <!-- TonConnect SDK -->
+  <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
+  <style>
+    body { font-family: Arial, text-align: center; padding: 20px; }
+    button { padding: 12px 24px; background: #0088cc; color: white; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <button id="connect-button">Connect Wallet</button>
+  <p id="status">Status: Loading...</p>
+
+  <script>
+    // Проверяем загрузку Telegram WebApp
+    if (!window.Telegram?.WebApp) {
+      console.error("Telegram WebApp not loaded!");
+      document.getElementById('status').textContent = "Error: Open in Telegram app";
+    } else {
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();
+    }
+
+    // Инициализация TonConnect
+    const connector = new TonConnect.TonConnect({
+      manifestUrl: './tonconnect-manifest.json'
+    });
+
+    document.getElementById('connect-button').addEventListener('click', async () => {
+      const wallets = await connector.getWallets();
+      await connector.connect(wallets[0]);
+    });
+
+    connector.onStatusChange((wallet) => {
+      if (wallet) {
+        Telegram.WebApp.sendData(wallet.account.address);
+        Telegram.WebApp.close();
+      }
+    });
+  </script>
+</body>
+</html>
