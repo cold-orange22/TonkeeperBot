@@ -2,37 +2,76 @@
 <html>
 <head>
   <title>TON Auth</title>
-  <!-- Подключаем через unpkg -->
   <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@telegram/web-app@latest/dist/telegram-web-app.js"></script>
-  <style>/* ваш CSS */</style>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    button {
+      padding: 12px 24px;
+      background: #0088cc;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 20px 0;
+    }
+    #status {
+      margin: 20px 0;
+      color: #666;
+    }
+    #error {
+      color: red;
+      margin: 20px 0;
+    }
+  </style>
 </head>
 <body>
   <h1>🔑 Connect Tonkeeper</h1>
-  <button id="connect-button">Connect Wallet</button>
-  <p id="status">Status: Loading scripts...</p>
+  <button id="connect-button" disabled>Connect Wallet</button>
+  <p id="status">Loading Telegram WebApp...</p>
+  <p id="error"></p>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    function initializeApp() {
       const status = document.getElementById('status');
+      const error = document.getElementById('error');
+      const connectButton = document.getElementById('connect-button');
 
-      // Проверка загрузки библиотек
-      if (!window.Telegram?.WebApp) {
-        status.textContent = "Error: Telegram WebApp not loaded";
-        return;
-      }
-
+      // Проверяем загрузку TonConnect
       if (typeof TonConnect === 'undefined') {
         status.textContent = "Error: TonConnect SDK not loaded";
+        error.textContent = "Please check your internet connection";
         return;
       }
 
-      // Основной код
+      // Проверяем загрузку Telegram WebApp
+      if (!window.Telegram?.WebApp) {
+        status.textContent = "Error: Telegram WebApp not loaded";
+        error.textContent = "Please open this page in Telegram app";
+        return;
+      }
+
+      // Инициализируем Telegram WebApp
+      try {
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+      } catch (e) {
+        error.textContent = `WebApp init error: ${e.message}`;
+        return;
+      }
+
+      // Основная логика
       const connector = new TonConnect.TonConnect({
         manifestUrl: 'https://tonkeeper-bot.vercel.app/tonconnect-manifest.json'
       });
 
-      document.getElementById('connect-button').addEventListener('click', async () => {
+      connectButton.addEventListener('click', async () => {
         try {
           status.textContent = "Connecting...";
           const wallets = await connector.getWallets();
@@ -49,8 +88,31 @@
         }
       });
 
+      connectButton.disabled = false;
       status.textContent = "Ready to connect!";
-    });
+    }
+
+    // Загрузка Telegram WebApp с fallback
+    function loadTelegramWebApp() {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/@telegram/web-app@6.7.0/dist/telegram-web-app.js';
+      script.onload = initializeApp;
+      script.onerror = () => {
+        // Fallback на unpkg
+        const fallbackScript = document.createElement('script');
+        fallbackScript.src = 'https://unpkg.com/@telegram/web-app@6.7.0/dist/telegram-web-app.js';
+        fallbackScript.onload = initializeApp;
+        fallbackScript.onerror = () => {
+          document.getElementById('status').textContent = "Failed to load Telegram WebApp";
+          document.getElementById('error').textContent = "Please try again later or open in Telegram app";
+        };
+        document.head.appendChild(fallbackScript);
+      };
+      document.head.appendChild(script);
+    }
+
+    // Начинаем загрузку
+    loadTelegramWebApp();
   </script>
 </body>
 </html>
