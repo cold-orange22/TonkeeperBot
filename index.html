@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Simple Telegram WebApp</title>
-  <script src="./telegram-web-app.js"></script>
+  <title>Telegram WebApp</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -23,46 +23,29 @@
     #status {
       color: #666;
     }
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div style="max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px;">
     <h1>Отправка сообщения</h1>
     <button id="send-button">Отправить "привет"</button>
-    <p id="status">Готово к работе</p>
+    <p id="status"></p>
   </div>
 
   <script>
-    // Проверяем загрузку Telegram WebApp
-    if (!window.Telegram?.WebApp) {
-      document.getElementById('status').textContent = "Откройте в приложении Telegram";
-      document.getElementById('send-button').disabled = true;
-    } else {
-      // Инициализируем Telegram WebApp
-      Telegram.WebApp.ready();
-      Telegram.WebApp.expand();
+    // Инициализация Telegram WebApp
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
 
-      // Обработчик кнопки
-      document.getElementById('send-button').addEventListener('click', () => {
-        try {
-          // Отправляем сообщение
-          Telegram.WebApp.sendData("привет");
-          document.getElementById('status').textContent = "Сообщение отправлено!";
-
-          // WebApp НЕ закрывается после отправки
-        } catch (error) {
-          document.getElementById('status').textContent = "Ошибка: " + error.message;
-        }
-      });
-    }
+    document.getElementById('send-button').addEventListener('click', () => {
+      try {
+        // Отправляем данные в бота
+        Telegram.WebApp.sendData("привет");
+        document.getElementById('status').textContent = "Сообщение отправлено!";
+      } catch (error) {
+        document.getElementById('status').textContent = "Ошибка: " + error.message;
+      }
+    });
   </script>
 </body>
 </html>
