@@ -2,8 +2,6 @@
 <html>
 <head>
   <title>TON Auth</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -30,29 +28,12 @@
   <p id="status">Status: Not connected</p>
 
   <script>
-    const connector = new TonConnect.TonConnect({
-      manifestUrl: 'https://tonkeeper-bot.vercel.app/tonconnect-manifest.json'
-    });
-
     const button = document.getElementById('connect-button');
     const status = document.getElementById('status');
 
-    button.addEventListener('click', async () => {
-      try {
-        const wallets = await connector.getWallets();
-        await connector.connect(wallets[0]); // Подключаем первый кошелёк (Tonkeeper)
-      } catch (err) {
-        status.textContent = `Error: ${err.message}`;
-      }
-    });
-
-    connector.onStatusChange((wallet) => {
-      if (wallet) {
-        status.textContent = `Connected: ${wallet.account.address}`;
-        Telegram.WebApp.sendData(wallet.account.address); // Отправляем адрес в бота
-      } else {
-        status.textContent = 'Status: Disconnected';
-      }
+    button.addEventListener('click', () => {
+      console.log("Привет"); // Выводим "Привет" в консоль
+      status.textContent = "Кнопка нажата! (см. консоль)";
     });
   </script>
 </body>
