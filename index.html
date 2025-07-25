@@ -1,46 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>TON Auth</title>
-  <!-- Локальный скрипт (скачанный с telegram.org) -->
+  <title>Simple Telegram WebApp</title>
   <script src="./telegram-web-app.js"></script>
-  <!-- TonConnect SDK -->
-  <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
   <style>
-    body { font-family: Arial, text-align: center; padding: 20px; }
-    button { padding: 12px 24px; background: #0088cc; color: white; border: none; cursor: pointer; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    button {
+      padding: 12px 24px;
+      background: #0088cc;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 20px 0;
+    }
+    #status {
+      color: #666;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
-  <button id="connect-button">Connect Wallet</button>
-  <p id="status">Status: Loading...</p>
+  <div class="container">
+    <h1>Отправка сообщения</h1>
+    <button id="send-button">Отправить "привет"</button>
+    <p id="status">Готово к работе</p>
+  </div>
 
   <script>
     // Проверяем загрузку Telegram WebApp
     if (!window.Telegram?.WebApp) {
-      console.error("Telegram WebApp not loaded!");
-      document.getElementById('status').textContent = "Error: Open in Telegram app";
+      document.getElementById('status').textContent = "Откройте в приложении Telegram";
+      document.getElementById('send-button').disabled = true;
     } else {
+      // Инициализируем Telegram WebApp
       Telegram.WebApp.ready();
       Telegram.WebApp.expand();
+
+      // Обработчик кнопки
+      document.getElementById('send-button').addEventListener('click', () => {
+        try {
+          // Отправляем сообщение
+          Telegram.WebApp.sendData("привет");
+          document.getElementById('status').textContent = "Сообщение отправлено!";
+
+          // WebApp НЕ закрывается после отправки
+        } catch (error) {
+          document.getElementById('status').textContent = "Ошибка: " + error.message;
+        }
+      });
     }
-
-    // Инициализация TonConnect
-    const connector = new TonConnect.TonConnect({
-      manifestUrl: './tonconnect-manifest.json'
-    });
-
-    document.getElementById('connect-button').addEventListener('click', async () => {
-      const wallets = await connector.getWallets();
-      await connector.connect(wallets[0]);
-    });
-
-    connector.onStatusChange((wallet) => {
-      if (wallet) {
-        Telegram.WebApp.sendData(wallet.account.address);
-        Telegram.WebApp.close();
-      }
-    });
   </script>
 </body>
 </html>
