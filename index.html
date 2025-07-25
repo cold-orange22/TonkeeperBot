@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Telegram WebApp</title>
+  <title>TON Connect</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -19,32 +20,97 @@
       cursor: pointer;
       font-size: 16px;
       margin: 20px 0;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #006699;
+    }
+    button:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
     }
     #status {
       color: #666;
+      min-height: 24px;
+    }
+    #error {
+      color: #ff3333;
+      min-height: 24px;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
   </style>
 </head>
 <body>
-  <div style="max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px;">
-    <h1>Отправка сообщения</h1>
-    <button id="send-button">Отправить "привет"</button>
-    <p id="status"></p>
+  <div class="container">
+    <h1>🔑 Connect Tonkeeper</h1>
+    <button id="connect-button">Connect Wallet</button>
+    <p id="status">Initializing...</p>
+    <p id="error"></p>
   </div>
 
   <script>
-    // Инициализация Telegram WebApp
-    Telegram.WebApp.ready();
-    Telegram.WebApp.expand();
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', () => {
+      const statusEl = document.getElementById('status');
+      const errorEl = document.getElementById('error');
+      const connectButton = document.getElementById('connect-button');
 
-    document.getElementById('send-button').addEventListener('click', () => {
-      try {
-        // Отправляем данные в бота
-        Telegram.WebApp.sendData("привет");
-        document.getElementById('status').textContent = "Сообщение отправлено!";
-      } catch (error) {
-        document.getElementById('status').textContent = "Ошибка: " + error.message;
+      // 1. Проверка Telegram WebApp
+      if (!window.Telegram?.WebApp) {
+        statusEl.textContent = "Please open in Telegram app";
+        connectButton.disabled = true;
+        return;
       }
+
+      // 2. Инициализация Telegram WebApp
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();
+
+      // 3. Инициализация TonConnect
+      const connector = new TonConnect.TonConnect({
+        manifestUrl: 'https://tonkeeper-bot.vercel.app/tonconnect-manifest.json'
+      });
+
+      // 4. Обработчик кнопки
+      connectButton.addEventListener('click', async () => {
+        try {
+          statusEl.textContent = "Connecting...";
+          connectButton.disabled = true;
+
+          const wallets = await connector.getWallets();
+          if (wallets.length === 0) {
+            throw new Error("No wallets available");
+          }
+
+          // Подключаем первый доступный кошелек (Tonkeeper)
+          await connector.connect(wallets[0]);
+        } catch (err) {
+          statusEl.textContent = "Connection failed";
+          errorEl.textContent = err.message;
+          connectButton.disabled = false;
+        }
+      });
+
+      // 5. Обработчик успешного подключения
+      connector.onStatusChange((wallet) => {
+        if (wallet) {
+          statusEl.textContent = "Wallet connected!";
+          // Отправляем адрес кошелька в Telegram бота
+          Telegram.WebApp.sendData(wallet.account.address);
+          // Закрываем WebApp (можно убрать, если нужно оставить открытым)
+          Telegram.WebApp.close();
+        }
+      });
+
+      connectButton.disabled = false;
+      statusEl.textContent = "Ready to connect!";
     });
   </script>
 </body>

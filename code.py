@@ -12,26 +12,26 @@ async def start(message: types.Message):
     markup = types.ReplyKeyboardMarkup(
         keyboard=[
             [types.KeyboardButton(
-                text="Отправить сообщение",
-                web_app=WebAppInfo(url="https://tonkeeper-bot.vercel.app/")
+                text="🔗 Connect Tonkeeper",
+                web_app=WebAppInfo(url="https://your-vercel-app.vercel.app/")
             )]
         ],
         resize_keyboard=True
     )
     await message.answer(
-        "Нажмите кнопку ниже, чтобы отправить сообщение:",
+        "Нажмите кнопку для подключения Tonkeeper:",
         reply_markup=markup
     )
 
 @dp.message(lambda message: message.web_app_data is not None)
 async def handle_web_app_data(message: types.Message):
-    web_app_data = message.web_app_data.data
-    print(web_app_data)
+    wallet_address = message.web_app_data.data
     await message.answer(
-        f"✅ Получено сообщение из WebApp:\n"
-        f"`{web_app_data}`",
+        f"✅ Кошелёк успешно подключен!\n"
+        f"Адрес: `{wallet_address}`",
         parse_mode="Markdown"
     )
+    # Здесь можно добавить логику работы с кошельком
 
 async def main():
     await dp.start_polling(bot)
