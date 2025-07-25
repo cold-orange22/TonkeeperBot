@@ -3,7 +3,9 @@ from aiogram.types import WebAppInfo
 from aiogram.filters import Command
 import asyncio
 
-bot = Bot(token="YOUR_BOT_TOKEN")
+import config
+
+bot = Bot(token=config.BOT_TOKEN)
 dp = Dispatcher()
 
 @dp.message(Command('start'))
