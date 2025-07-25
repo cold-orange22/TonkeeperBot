@@ -2,96 +2,55 @@
 <html>
 <head>
   <title>TON Auth</title>
+  <!-- Подключаем через unpkg -->
+  <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-      background-color: #f5f5f5;
-    }
-    button {
-      background: #0088cc;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      margin: 10px;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background: #006699;
-    }
-    #status {
-      margin-top: 20px;
-      padding: 10px;
-      border-radius: 5px;
-      background: #eee;
-    }
-  </style>
+  <style>/* ваш CSS */</style>
 </head>
 <body>
   <h1>🔑 Connect Tonkeeper</h1>
   <button id="connect-button">Connect Wallet</button>
-  <p id="status">Status: Not connected</p>
+  <p id="status">Status: Loading scripts...</p>
 
   <script>
-    // Инициализация TonConnect
-    const connector = new TonConnect.TonConnect({
-      manifestUrl: 'https://tonkeeper-bot.vercel.app/tonconnect-manifest.json'
-    });
+    document.addEventListener('DOMContentLoaded', () => {
+      const status = document.getElementById('status');
 
-    const button = document.getElementById('connect-button');
-    const status = document.getElementById('status');
-
-    // Проверяем доступность Tonkeeper
-    async function connectWallet() {
-      try {
-        status.textContent = "Connecting...";
-
-        // Получаем список доступных кошельков
-        const wallets = await connector.getWallets();
-        const tonkeeper = wallets.find(w => w.name === 'Tonkeeper');
-
-        if (!tonkeeper) {
-          throw new Error('Tonkeeper not found');
-        }
-
-        // Открываем Tonkeeper для подключения
-        await connector.connect({ jsBridgeKey: tonkeeper.jsBridgeKey });
-
-      } catch (error) {
-        status.textContent = `Error: ${error.message}`;
-        console.error(error);
+      // Проверка загрузки библиотек
+      if (!window.Telegram?.WebApp) {
+        status.textContent = "Error: Telegram WebApp not loaded";
+        return;
       }
-    }
 
-    // Обработчик изменений статуса кошелька
-    connector.onStatusChange((wallet) => {
-      if (wallet) {
-        status.textContent = `Connected: ${wallet.account.address.slice(0, 6)}...${wallet.account.address.slice(-4)}`;
+      if (typeof TonConnect === 'undefined') {
+        status.textContent = "Error: TonConnect SDK not loaded";
+        return;
+      }
 
-        // Отправляем адрес в Telegram бота
-        if (window.Telegram && Telegram.WebApp) {
+      // Основной код
+      const connector = new TonConnect.TonConnect({
+        manifestUrl: 'https://tonkeeper-bot.vercel.app/tonconnect-manifest.json'
+      });
+
+      document.getElementById('connect-button').addEventListener('click', async () => {
+        try {
+          status.textContent = "Connecting...";
+          const wallets = await connector.getWallets();
+          await connector.connect(wallets[0]);
+        } catch (err) {
+          status.textContent = `Error: ${err.message}`;
+        }
+      });
+
+      connector.onStatusChange((wallet) => {
+        if (wallet) {
           Telegram.WebApp.sendData(wallet.account.address);
           Telegram.WebApp.close();
         }
-      } else {
-        status.textContent = "Status: Disconnected";
-      }
+      });
+
+      status.textContent = "Ready to connect!";
     });
-
-    // Назначаем обработчик кнопки
-    button.addEventListener('click', connectWallet);
-
-    // Инициализация Telegram WebApp
-    if (window.Telegram && Telegram.WebApp) {
-      Telegram.WebApp.ready();
-      Telegram.WebApp.expand();
-    }
   </script>
 </body>
 </html>
